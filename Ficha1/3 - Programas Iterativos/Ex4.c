@@ -1,31 +1,27 @@
 #include <stdio.h>
 
-void triangulo2(int n) {
-  for (int i = 1; i <= n; i++) {
-    for (int j = 0; j < (n - i); j++) {
-      printf(" ");
-    }
-    for (int k = 0; k < (2 * i - 1); k++) {
+int circle(int r) {
+  int contador = 0;
+  for (int y = r; y >= -r; y--) {
+    for (int x = -r; x <= r; x++) {
+      if(x*x+y*y <= r * r) {
       printf("#");
+      contador++;
     }
+    else{
+      printf(" ");
+    }    
+  }
     printf("\n");
   }
-
-  for (int i = n - 1; i >= 1; i--) {
-    for (int j = 0; j < (n - i); j++) {
-      printf(" ");
-    }
-    for (int k = 0; k < (2 * i - 1); k++) {
-      printf("#");
-    }
-    printf("\n");
-  }
+  return contador;
 }
 int main() {
 
   int n;
   printf("Introduza o número de #: ");
   scanf("%d", &n);
-  triangulo2(n);
+  int total = circle(n);
+  printf("\nTotal de '#' impressos: %d\n", total);
   return 0;
 }
