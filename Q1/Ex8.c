@@ -4,12 +4,12 @@ char *strcpy(char *dest, char *src) {
   char *p = dest;
   while (*p++ = *src++)
     ;
-  return src;
+  return dest;
 }
 
 int main() {
   char s1[10];
-  char s2[10] = "Worlds!";
+  char s2[10] = "Worlsa!";
 
   strcpy(s1, s2);
 
