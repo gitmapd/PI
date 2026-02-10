@@ -1,15 +1,33 @@
+#include <limits.h>
+#include <stdbool.h>
 #include <stdio.h>
-int bitsUm(unsigned int n) {
-  int count = 0;
-  while (n) {
-    if(n & 1 ) {
-      count++;
-    }
-    n>>=1;
-  }
-return count;
-}
+
 int main() {
-  int unsigned n = 100;
-  printf("%d\n", bitsUm(n));
+
+  int numero;
+  int maior_elem = INT_MIN;
+
+  printf("Introduza uma sequência e termina com 0:\n");
+
+  if (scanf("%d", &numero) != 1) {
+    printf("Erro a ler input.");
+    return 1;
+  }
+
+  while (numero != 0) {
+    if (numero > maior_elem) {
+      maior_elem = numero;
+    }
+    if (scanf("%d", &numero) != 1) {
+      printf("Erro a ler input.");
+      return 1;
+    }
+  }
+  if (maior_elem == INT_MIN) {
+    printf("Não houve inteiros válidos introduzidos.\n");
+  } else {
+    printf("O valor mais alto desta sequência foi: %d\n", maior_elem);
+  }
+
+  return 0;
 }
