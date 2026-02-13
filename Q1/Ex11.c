@@ -1,16 +1,17 @@
 #include <stdio.h>
 char *sttrevs(char *s1) {
 
-  int i = 0;
+  // int i = 0;
+  //  while (s1[i] != '\0') {
+  //    i++;
+  //  }
+  // int length = i;
+
   char *p = s1;
-  // while (s1[i] != '\0') {
-  //   i++;
-  // }
-  while(*p != '\0') {
+  while (*p != '\0') {
     p++;
-    i++;
   }
-  int length = i;
+  int length = p - s1;
 
   int start = 0;
   int end = length - 1;
