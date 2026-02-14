@@ -20,15 +20,12 @@ int bitsZ(unsigned int n) {
   return count;
 }
 
-int bitsTotalZ(unsigned int n) {
-  return sizeof(n) * 8 - bitsUm(n);
-}
+int bitsTotalZ(unsigned int n) { return sizeof(n) * 8 - bitsUm(n); }
 int main() {
   int unsigned n = 100;
   printf("%d\n", bitsUm(n));
 
   printf("%d\n", bitsZ(n));
-  
-  printf("%d\n", bitsTotalZ(n));
 
+  printf("%d\n", bitsTotalZ(n));
 }
