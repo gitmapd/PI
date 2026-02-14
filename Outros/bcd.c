@@ -1,0 +1,217 @@
+#include <limits.h>
+#include <stdint.h>
+#include <stdio.h>
+
+int bin_puro(unsigned int n) {
+  int count = 0;
+  while (n > 0) {
+    count++;
+    n >>= 1;
+  }
+  return (count == 0) ? 1 : 0;
+}
+int find_bits(int bcd) {
+  if (bcd == 0)
+    return 4;
+  int bits = 0;
+  if (bcd & 0xF000)
+    bits = 16;
+  else if (bcd & 0x0F00)
+    bits = 12;
+  else if (bcd & 0x00F0)
+    bits = 8;
+  else
+    bits = 4;
+  return bits;
+}
+
+uint16_t dec2BCD(int dec) {
+  uint16_t m = (dec / 1000) % 10;
+  uint16_t c = (dec / 100) % 10;
+  uint16_t d = (dec / 10) % 10;
+  uint16_t u = dec % 10;
+  return (m << 12) | (c << 8) | (d << 4) | u;
+}
+
+uint16_t bcd2DEC(uint16_t bcd) {
+
+  uint16_t m = (bcd >> 12) & 0x000F;
+  uint16_t c = (bcd >> 8) & 0x000F;
+  uint16_t d = (bcd >> 4) & 0x000F;
+  uint16_t u = bcd & 0x000F;
+  return (m * 1000) + (c * 100) + (d * 10) + u;
+}
+
+uint16_t bcd2Bin(uint16_t bcd) {
+
+  uint16_t m = (bcd >> 12) & 0x000F;
+  uint16_t c = (bcd >> 8) & 0x000F;
+  uint16_t d = (bcd >> 4) & 0x000F;
+  uint16_t u = bcd & 0x000F;
+  return (m * 1000) + (c * 100) + (d * 10) + u;
+}
+uint16_t bin2BCD(uint16_t a) {
+  if (a == 0)
+    return 0;
+  uint32_t bcd = 0;
+  int bits = bin_puro(a);
+  for (int i = 0; i < bits; i++) {
+    if (((bcd & 0x000F)) >= 0x0005)
+      bcd += 0x0003;
+    if (((bcd & 0x00F0)) >= 0x0050)
+      bcd += 0x0030;
+    if (((bcd & 0x0F00)) >= 0x0500)
+      bcd += 0x0300;
+    if (((bcd & 0xF000)) >= 0x5000)
+      bcd += 0x3000;
+    int bit = (a >> (bits - 1 - i)) & 1;
+    bcd = (bcd << 1) | bit;
+  }
+  return bcd;
+}
+uint16_t somarBCD(uint16_t a, uint16_t b) {
+  uint16_t res = (uint16_t)a + b;
+  if (((a & 0x000F) + (b & 0x000F)) > 0x0009)
+    res += 0x0006;
+  if (((res & 0x00F0)) > 0x0090)
+    res += 0x0060;
+  if (((res & 0x0F00)) > 0x0900)
+    res += 0x0600;
+  if (((res & 0xF000)) > 0x9000)
+    res += 0x6000;
+  return (uint16_t)res;
+}
+
+uint32_t somarBCD_32(uint32_t a, uint32_t b) {
+  uint64_t res = (uint64_t)a + b;
+
+  for (int i = 0; i < sizeof(uint32_t) * 2; i++) {
+    int desl = i * 4;
+    uint32_t mascara = (0xF << desl);
+    uint32_t limite = (0x9 << desl);
+    uint32_t correcao = (0x6 << desl);
+    if (((res >> desl) & 0xF) > 0x9) {
+      res += correcao;
+    }
+  }
+  return (uint32_t)res;
+}
+
+uint16_t subtrairBCD(uint16_t a, uint16_t b) {
+  uint16_t comp9 = 0x9999 - b;
+  return somarBCD(a, (somarBCD(comp9, 0x0001)));
+}
+
+uint16_t multiplicarBCD(uint16_t a, uint16_t b) {
+  uint32_t res = 0;
+  uint16_t digitos[4];
+
+  digitos[0] = (b & 0x000F);
+  digitos[1] = (b >> 4) & 0x000F;  
+  digitos[2] = (b >> 8) & 0x000F;  
+  digitos[3] = (b >> 12) & 0x000F; 
+  for (int j = 0; j < 4; j++) {
+    uint32_t parcela = 0;
+    for (int i = 0; i < digitos[j]; i++) {
+
+      parcela = somarBCD_32(parcela, a);
+    }
+    uint32_t parcela_desc = parcela << (j * 4);
+    res = somarBCD_32(res, parcela_desc);
+  }
+  return (uint16_t)res;
+}
+void print_bin(uint16_t bcd) {
+  for (int i = find_bits(bcd) - 1; i >= 0; i--) {
+    uint16_t bit = (bcd >> i) & 1;
+    printf("%u", bit);
+    if (i % 4 == 0 && i != 0)
+      printf(" ");
+  }
+  // printf("\n");
+}
+
+void print_bin_custom(uint16_t bcd, int tam) {
+  for (int i = tam - 1; i >= 0; i--) {
+    uint16_t bit = (bcd >> i) & 1;
+    printf("%u", bit);
+    if (i % 4 == 0 && i != 0)
+      printf(" ");
+  }
+  // printf("\n");
+}
+void tabela_decbcd(uint16_t *numeros, int total) {
+
+  printf(" DEC   |       BIN (BCD)      | HEX (BCD)\n");
+  printf("-------|----------------------|----------\n");
+  for (int i = 0; i < total; i++) {
+    int n = numeros[i];
+    uint16_t res = dec2BCD(n);
+    printf(" %-5d | ", n);
+    int tam = (res > 0x0FFF) ? 16 : (res > 0x00FF ? 12 : 8);
+    print_bin_custom(res, tam);
+    int espacos = 21 - (tam + (tam / 4 - 1));
+    for (int s = 0; s < espacos; s++)
+      printf(" ");
+    printf("| 0x%04X\n", res);
+  }
+  printf("---------------------|---------|---------\n");
+}
+void tabela_bcddec(uint16_t *numeros, int total) {
+
+  printf("      BIN (BCD)      |   DEC   |   HEX   \n");
+  // 2. Linha separadora (20 traços + barra + 9 traços + barra + 9 traços)
+  printf("---------------------|---------|---------\n");
+
+  for (int i = 0; i < total; i++) {
+    int n = numeros[i];
+    uint16_t res = bcd2Bin(n);
+    // int tam = (n > 0xFF) ? 12 : 8;
+    int tam = (n > 0x0FFF) ? 16 : (n > 0x00FF ? 12 : 8);
+    print_bin_custom(n, tam);
+    int espacos = 20 - (tam + (tam / 4 - 1));
+    for (int s = 0; s < espacos; s++)
+      printf(" ");
+    printf(" |   %-5u | 0x%03X\n", res, n);
+  }
+  printf("---------------------|---------|---------\n");
+}
+int main() {
+  uint16_t numeros_dec[] = {10, 13, 25, 57, 125, 1964};
+  uint16_t numeros_bin[] = {0b10010110, 0b1010100, 0b100001010111};
+  int total_dec = sizeof(numeros_dec) / sizeof(numeros_dec[0]);
+  int total_bin = sizeof(numeros_bin) / sizeof(numeros_bin[0]);
+  tabela_decbcd(numeros_dec, total_dec);
+  tabela_bcddec(numeros_bin, total_bin);
+
+  uint16_t a = 0x0025;
+  uint16_t b = 0x0013;
+
+  printf("0x%x", multiplicarBCD(a, b));
+  //   uint16_t x = 1964;
+  //   uint16_t res = dec2BCD(x);
+  //   uint16_t bins = bcd2Bin(res);
+  // printf("0x%02x\n", res);
+  //   print_bin(bins);
+
+  // printf("%u", double_dabble(res));
+  //  int bits = find_bits(res);
+  //  if (bits == 4)
+  //    printf("                | ");
+  //  if (bits == 8)
+  //    printf("           | ");
+  //  if (bits == 12)
+  //    printf("      | ");
+  //  if (bits == 16)
+  //    printf(" | ");
+  return 0;
+
+  // uint32_t x = 1964;
+  // uint32_t y = 1;
+  // uint16_t res = somarBCD(dec2BCD(x), dec2BCD(y));
+
+  // printf("0x%02x\n", res);
+
+  // printf("0x%02x",dec2BCD(x));
+  // print_bin(res);
+}
