@@ -2,6 +2,26 @@
 #include <stdint.h>
 #include <stdio.h>
 
+
+int contar_bits (unsigned int n) {
+    if (n == 0) return 1;
+
+    int contador = 0;
+    while (n > 0) {
+        n = n / 2;  // Dividir por 2 é o mesmo que n >>= 1
+        contador++;
+    }
+    return contador;
+}
+/**
+ * bin_puro - Verifica se o valor é zero.
+ * @n: Número inteiro sem sinal a ser testado.
+ * * Exemplo de Funcionamento:
+ * - Se n = 0 (0b0000): O ciclo não executa, retorna 1.
+ * - Se n = 5 (0b0101): O ciclo corre 3 vezes, retorna 0.
+ * * Nota: Apesar de contar bits internamente, o retorno atual
+ * funciona como um booleano (1 se for zero, 0 se não for).
+ */
 int bin_puro(unsigned int n) {
   int count = 0;
   while (n > 0) {
@@ -10,6 +30,16 @@ int bin_puro(unsigned int n) {
   }
   return (count == 0) ? 1 : 0;
 }
+
+/**
+ * find_bits - Identifica a posição do último bloco de 4 bits (nibble) ativo.
+ * @bcd: Valor em formato BCD (Binary Coded Decimal).
+ * * Exemplos de Entrada/Saída:
+ * - Input: 0x0005 (0000 0000 0000 0101) -> Retorna 4  (Cai no else)
+ * - Input: 0x00A0 (0000 0000 1010 0000) -> Retorna 8  (Ativa a máscara 0x00F0)
+ * - Input: 0x0B00 (0000 1011 0000 0000) -> Retorna 12 (Ativa a máscara 0x0F00)
+ * - Input: 0x2000 (0010 0000 0000 0000) -> Retorna 16 (Ativa a máscara 0xF000)
+ */
 int find_bits(int bcd) {
   if (bcd == 0)
     return 4;
@@ -24,7 +54,37 @@ int find_bits(int bcd) {
     bits = 4;
   return bits;
 }
+/**
+ * find_bits_mag - Determina o tamanho necessário baseado no valor.
+ * * Lógica de Magnitude:
+ * - Se > 4095 (0x0FFF): Ocupa obrigatoriamente 16 bits.
+ * - Se > 255  (0x00FF): Ocupa pelo menos 12 bits.
+ * - Se > 15   (0x000F): Ocupa pelo menos 8 bits.
+ * - Caso contrário   : Ocupa os 4 bits base.
+ */
+int find_bits_mag(int bcd) {
+  if (bcd == 0)
+    return 4;
+  if (bcd > 0xF000)
+    return 16;
+  if (bcd > 0x0F00)
+    return 12;
+  if (bcd & 0x00F0)
+    return 8;
+  return 4;
+}
 
+/**
+ * dec2BCD - Converte um número decimal (0-9999) para formato BCD de 16 bits.
+ * @dec: Valor decimal a converter.
+ * * Exemplo de Funcionamento (dec = 1234):
+ * - m = 1, c = 2, d = 3, u = 4
+ * - Shift m (1 << 12): 0001 0000 0000 0000
+ * - Shift c (2 << 8) : 0000 0010 0000 0000
+ * - Shift d (3 << 4) : 0000 0000 0011 0000
+ * - Valor u (4)      : 0000 0000 0000 0100
+ * - Resultado final  : 0x1234 (BCD)
+ */
 uint16_t dec2BCD(int dec) {
   uint16_t m = (dec / 1000) % 10;
   uint16_t c = (dec / 100) % 10;
@@ -33,6 +93,47 @@ uint16_t dec2BCD(int dec) {
   return (m << 12) | (c << 8) | (d << 4) | u;
 }
 
+/**
+ * dec2BCD_ciclo - Converte decimal para BCD usando um loop.
+ * * Exemplo passo a passo (dec = 123):
+ * Iteração 0: digito=3, shift=0  -> bcd = 0x0003, dec = 12
+ * Iteração 1: digito=2, shift=4  -> bcd = 0x0023, dec = 1
+ * Iteração 2: digito=1, shift=8  -> bcd = 0x0123, dec = 0
+ * Iteração 3: digito=0, shift=12 -> bcd = 0x0123, dec = 0
+ */
+uint32_t dec2BCD_ciclo(int dec) {
+    uint32_t bcd = 0;
+    
+    // 4 dígitos (milhares, centenas, dezenas, unidades)
+    for (int i = 0; i < 4; i++) {
+        // 1. Isola o dígito atual (começando pela unidade)
+        int digito = dec % 10;
+        
+        // 2. Calcula quanto tem de "andar" para a esquerda
+        // i=0 (unidade) -> shift 0
+        // i=1 (dezena)  -> shift 4
+        // i=2 (centena) -> shift 8
+        // i=3 (milhar)  -> shift 12
+        int shift = i * 4;
+        
+        bcd |= (digito << shift);
+        
+        // 4. Prepara o próximo dígito (ex: 1234 -> 123)
+        dec /= 10;
+    }
+    
+    return bcd;
+}
+/**
+ * bcd2DEC - Converte um valor BCD de 16 bits para um número decimal inteiro.
+ * @bcd: Valor BCD (ex: 0x1234).
+ * * Exemplo de Funcionamento (bcd = 0x1234):
+ * - m = (0x1234 >> 12) & 0xF = 1
+ * - c = (0x1234 >> 8)  & 0xF = 2
+ * - d = (0x1234 >> 4)  & 0xF = 3
+ * - u = (0x1234 & 0xF)       = 4
+ * - Retorno: (1*1000) + (2*100) + (3*10) + 4 = 1234 (Decimal)
+ */
 uint16_t bcd2DEC(uint16_t bcd) {
 
   uint16_t m = (bcd >> 12) & 0x000F;
@@ -42,6 +143,19 @@ uint16_t bcd2DEC(uint16_t bcd) {
   return (m * 1000) + (c * 100) + (d * 10) + u;
 }
 
+/**
+ * @brief Converte um valor em formato BCD de 16 bits para binário inteiro.
+ * * A função decompõe o valor BCD em 4 dígitos decimais (milhares, centenas, 
+ * dezenas e unidades), isolando cada nibble (4 bits) através de shifts e máscaras.
+ * * @param bcd Valor codificado em BCD (ex: 0x1234).
+ * @return uint16_t O valor decimal convertido em binário puro (ex: 1234).
+ * * @note Exemplo de processamento para bcd = 0x1234:
+ * 1. m = (0x1234 >> 12) & 0xF = 1  -> 1 * 1000 = 1000
+ * 2. c = (0x1234 >> 8)  & 0xF = 2  -> 2 * 100  = 200
+ * 3. d = (0x1234 >> 4)  & 0xF = 3  -> 3 * 10   = 30
+ * 4. u = (0x1234 & 0xF)       = 4  -> 4 * 1    = 4
+ * Resultado final: 1234
+ */
 uint16_t bcd2Bin(uint16_t bcd) {
 
   uint16_t m = (bcd >> 12) & 0x000F;
@@ -50,6 +164,20 @@ uint16_t bcd2Bin(uint16_t bcd) {
   uint16_t u = bcd & 0x000F;
   return (m * 1000) + (c * 100) + (d * 10) + u;
 }
+
+/**
+ * bin2BCD - Converte binário para BCD usando o algoritmo Double Dabble.
+ * @a: Valor binário puro (ex: 255).
+ * * Lógica:
+ * - Percorre cada bit do número original.
+ * - Se um nibble (4 bits) do BCD for >= 5, soma 3 (ajuste de carry).
+ * - Desloca tudo para a esquerda e insere o próximo bit.
+ * * Exemplo (a = 13):
+ * 1. Inicializa bcd = 0.
+ * 2. Faz shift dos bits de '13' (1101) para dentro do bcd.
+ * 3. Faz o ajuste (+3) sempre que um dígito decimal "ameaça" passar de 9.
+ * Retorno: 0x0013.
+ */
 uint16_t bin2BCD(uint16_t a) {
   if (a == 0)
     return 0;
@@ -107,9 +235,9 @@ uint16_t multiplicarBCD(uint16_t a, uint16_t b) {
   uint16_t digitos[4];
 
   digitos[0] = (b & 0x000F);
-  digitos[1] = (b >> 4) & 0x000F;  
-  digitos[2] = (b >> 8) & 0x000F;  
-  digitos[3] = (b >> 12) & 0x000F; 
+  digitos[1] = (b >> 4) & 0x000F;
+  digitos[2] = (b >> 8) & 0x000F;
+  digitos[3] = (b >> 12) & 0x000F;
   for (int j = 0; j < 4; j++) {
     uint32_t parcela = 0;
     for (int i = 0; i < digitos[j]; i++) {
