@@ -2,6 +2,17 @@
 #include <stdint.h>
 #include <stdio.h>
 
+/* Nota: reverter ao original
+  uint32_t *numeros, int total
+  int total_bin = sizeof(numeros_bin) / sizeof(numeros_bin[0]);
+  tabela_decbcd(numeros);
+  tabela_bcddec(numeros_bin, total_bin);
+*/
+typedef struct {
+  uint32_t *data;
+  int total;
+} DataList;
+
 int contar_bits(unsigned int n) {
   if (n == 0)
     return 1;
@@ -45,18 +56,16 @@ int bin_puro(unsigned int n) {
 int find_bits(int bcd) {
   if (bcd == 0)
     return 4;
-  int bits = 0;
   if (bcd & 0xF0000)
-    bits = 20;
+    return 20;
   else if (bcd & 0x0F000)
-    bits = 16;
+    return 16;
   else if (bcd & 0x00F00)
-    bits = 12;
+    return 12;
   else if (bcd & 0x000F0)
-    bits = 8;
+    return 8;
   else
-    bits = 4;
-  return bits;
+    return 4;
 }
 /**
  * find_bits_mag - Determina o tamanho necessário baseado no valor.
@@ -291,12 +300,12 @@ void print_bin_custom(uint32_t bcd, int tam) {
   }
   // printf("\n");
 }
-void tabela_decbcd(uint32_t *numeros, int total) {
+void tabela_decbcd(DataList total) {
 
   printf(" DEC   |       BIN (BCD)      | HEX (BCD)\n");
   printf("-------|----------------------|----------\n");
-  for (int i = 0; i < total; i++) {
-    int n = numeros[i];
+  for (int i = 0; i < total.total; i++) {
+    int n = total.data[i];
     uint32_t res = dec2BCD(n);
     printf(" %-5d | ", n);
     int tam = (res > 0x0FFF) ? 16 : (res > 0x00FF ? 12 : 8);
@@ -308,14 +317,14 @@ void tabela_decbcd(uint32_t *numeros, int total) {
   }
   printf("---------------------|---------|---------\n");
 }
-void tabela_bcddec(uint32_t *numeros, int total) {
+void tabela_bcddec(DataList total) {
 
   printf("      BIN (BCD)      |   DEC   |   HEX   \n");
   // 2. Linha separadora (20 traços + barra + 9 traços + barra + 9 traços)
   printf("---------------------|---------|---------\n");
 
-  for (int i = 0; i < total; i++) {
-    int n = numeros[i];
+  for (int i = 0; i < total.total; i++) {
+    int n = total.data[i];
     int res = bcd2Bin(n);
     // int tam = (n > 0xFF) ? 12 : 8;
     int tam = (n > 0x0FFF) ? 16 : (n > 0x00FF ? 12 : 8);
@@ -330,11 +339,22 @@ void tabela_bcddec(uint32_t *numeros, int total) {
 int main() {
   uint32_t numeros_dec[] = {10, 13, 25, 57, 125, 1964};
   uint32_t numeros_bin[] = {0b10010110, 0b1010100, 0b100001010111};
-  int total_dec = sizeof(numeros_dec) / sizeof(numeros_dec[0]);
-  int total_bin = sizeof(numeros_bin) / sizeof(numeros_bin[0]);
-  tabela_decbcd(numeros_dec, total_dec);
-  tabela_bcddec(numeros_bin, total_bin);
+  // int total_dec = sizeof(numeros_dec) / sizeof(numeros_dec[0]);
+  DataList numeros_d;
+  DataList numeros_b;
+ 
+  numeros_d.data = numeros_dec;
+  numeros_d.total = sizeof(numeros_dec) / sizeof(numeros_dec[0]);
+
+  numeros_b.data = numeros_bin;
+  numeros_b.total = sizeof(numeros_bin) / sizeof(numeros_bin[0]);
+
+  tabela_decbcd(numeros_d);
+
+  tabela_bcddec(numeros_b);
+
   uint32_t a = 0x96D;
+
   uint32_t b = 0x10C;
   int num1 = bcd2Bin(a); // Converte 0x96D para -96
   int num2 = bcd2Bin(b); // Converte 0x10C para 10
