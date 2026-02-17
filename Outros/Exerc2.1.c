@@ -1,45 +1,30 @@
 #include <stdio.h>
 #include <string.h>
 
-void transf_bits_strings(char *bits) {
-  int total_bits = strlen(bits);
-  char resultado[100];
-  int res_id = 0;
-  for (int i; i < total_bits; i += 7) {
-    int ascii_values = 0;
-    for (int k = 0; k < 7; k++) {
-      if (bits[i + k] == '1') {
-        ascii_values += pow(2, 6 - k);
-      }
-      resultado[res_id++] = (char)ascii_values;
-    }
-    resultado[res_id] = '\0';
-  }
-  printf("%s",resultado);
-}
 typedef struct {
   char *codigo;
   int valor;
   char *simbolo;
 } CodigoRomano;
+
+
 CodigoRomano tabela[] = {{"01", 1, "I"},    {"100", 5, "V"},
                          {"00", 10, "X"},   {"101", 50, "L"},
                          {"110", 100, "C"}, {"111", 500, "D"}};
 
+#define NUM_SIMBOLOS 6
 void descodificar_binario_romano(char *sequencia) {
-  printf("--- Descodificador Automático (Exerc 2.1) ---\n");
   printf("Input: %s\n", sequencia);
 
-  char buffer[10] = ""; // Armazena temporariamente os bits lidos
+  char buffer[10] = ""; 
   int total = 0;
-  int i = 0;
   for (int j = 0; sequencia[j] != '\0'; j++) {
     int len = strlen(buffer);
     buffer[len] = sequencia[j];
     buffer[len + 1] = '\0';
-    for (int k = 0; k < 6; k++) {
+    for (int k = 0; k < NUM_SIMBOLOS; k++) {
       if (strcmp(buffer, tabela[k].codigo) == 0) {
-        printf("%s", tabela[k].simbolo);
+        printf("%s ", tabela[k].simbolo);
         total += tabela[k].valor;
         buffer[0] = '\0';
         break;
@@ -47,4 +32,9 @@ void descodificar_binario_romano(char *sequencia) {
     }
   }
   printf("\nResultado Final: %d\n\n", total);
+}
+
+int main() {
+  descodificar_binario_romano("111101000101");
+  return 0;
 }

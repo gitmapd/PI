@@ -2,16 +2,16 @@
 #include <stdint.h>
 #include <stdio.h>
 
+int contar_bits(unsigned int n) {
+  if (n == 0)
+    return 1;
 
-int contar_bits (unsigned int n) {
-    if (n == 0) return 1;
-
-    int contador = 0;
-    while (n > 0) {
-        n = n / 2;  // Dividir por 2 é o mesmo que n >>= 1
-        contador++;
-    }
-    return contador;
+  int contador = 0;
+  while (n > 0) {
+    n = n / 2; // Dividir por 2 é o mesmo que n >>= 1
+    contador++;
+  }
+  return contador;
 }
 /**
  * bin_puro - Verifica se o valor é zero.
@@ -23,12 +23,14 @@ int contar_bits (unsigned int n) {
  * funciona como um booleano (1 se for zero, 0 se não for).
  */
 int bin_puro(unsigned int n) {
+  if (n == 0)
+    return 1;
   int count = 0;
   while (n > 0) {
     count++;
     n >>= 1;
   }
-  return (count == 0) ? 1 : 0;
+  return count;
 }
 
 /**
@@ -44,11 +46,13 @@ int find_bits(int bcd) {
   if (bcd == 0)
     return 4;
   int bits = 0;
-  if (bcd & 0xF000)
+  if (bcd & 0xF0000)
+    bits = 20;
+  else if (bcd & 0x0F000)
     bits = 16;
-  else if (bcd & 0x0F00)
+  else if (bcd & 0x00F00)
     bits = 12;
-  else if (bcd & 0x00F0)
+  else if (bcd & 0x000F0)
     bits = 8;
   else
     bits = 4;
@@ -85,12 +89,14 @@ int find_bits_mag(int bcd) {
  * - Valor u (4)      : 0000 0000 0000 0100
  * - Resultado final  : 0x1234 (BCD)
  */
-uint16_t dec2BCD(int dec) {
-  uint16_t m = (dec / 1000) % 10;
-  uint16_t c = (dec / 100) % 10;
-  uint16_t d = (dec / 10) % 10;
-  uint16_t u = dec % 10;
-  return (m << 12) | (c << 8) | (d << 4) | u;
+uint32_t dec2BCD(int dec) {
+  uint32_t sinal = (dec < 0) ? 0x0D : 0x0C;
+  int val = (dec < 0) ? -dec : dec;
+  uint32_t m = (val / 1000) % 10;
+  uint32_t c = (val / 100) % 10;
+  uint32_t d = (val / 10) % 10;
+  uint32_t u = val % 10;
+  return (m << 16) | (c << 12) | (d << 8) | (u << 4) | sinal;
 }
 
 /**
@@ -102,27 +108,27 @@ uint16_t dec2BCD(int dec) {
  * Iteração 3: digito=0, shift=12 -> bcd = 0x0123, dec = 0
  */
 uint32_t dec2BCD_ciclo(int dec) {
-    uint32_t bcd = 0;
-    
-    // 4 dígitos (milhares, centenas, dezenas, unidades)
-    for (int i = 0; i < 4; i++) {
-        // 1. Isola o dígito atual (começando pela unidade)
-        int digito = dec % 10;
-        
-        // 2. Calcula quanto tem de "andar" para a esquerda
-        // i=0 (unidade) -> shift 0
-        // i=1 (dezena)  -> shift 4
-        // i=2 (centena) -> shift 8
-        // i=3 (milhar)  -> shift 12
-        int shift = i * 4;
-        
-        bcd |= (digito << shift);
-        
-        // 4. Prepara o próximo dígito (ex: 1234 -> 123)
-        dec /= 10;
-    }
-    
-    return bcd;
+  uint32_t bcd = 0;
+
+  // 4 dígitos (milhares, centenas, dezenas, unidades)
+  for (int i = 0; i < 4; i++) {
+    // 1. Isola o dígito atual (começando pela unidade)
+    int digito = dec % 10;
+
+    // 2. Calcula quanto tem de "andar" para a esquerda
+    // i=0 (unidade) -> shift 0
+    // i=1 (dezena)  -> shift 4
+    // i=2 (centena) -> shift 8
+    // i=3 (milhar)  -> shift 12
+    int shift = i * 4;
+
+    bcd |= (digito << shift);
+
+    // 4. Prepara o próximo dígito (ex: 1234 -> 123)
+    dec /= 10;
+  }
+
+  return bcd;
 }
 /**
  * bcd2DEC - Converte um valor BCD de 16 bits para um número decimal inteiro.
@@ -134,19 +140,22 @@ uint32_t dec2BCD_ciclo(int dec) {
  * - u = (0x1234 & 0xF)       = 4
  * - Retorno: (1*1000) + (2*100) + (3*10) + 4 = 1234 (Decimal)
  */
-uint16_t bcd2DEC(uint16_t bcd) {
+int bcd2DEC(uint32_t bcd) {
 
-  uint16_t m = (bcd >> 12) & 0x000F;
-  uint16_t c = (bcd >> 8) & 0x000F;
-  uint16_t d = (bcd >> 4) & 0x000F;
-  uint16_t u = bcd & 0x000F;
-  return (m * 1000) + (c * 100) + (d * 10) + u;
+  int m = (bcd >> 16) & 0x000F;
+  int c = (bcd >> 12) & 0x000F;
+  int d = (bcd >> 8) & 0x000F;
+  int u = (bcd >> 4) & 0x000F;
+  int s = bcd & 0x000F;
+  int res = (m * 1000) + (c * 100) + (d * 10) + u;
+  return (s == 0x0D) ? -res : res;
 }
 
 /**
  * @brief Converte um valor em formato BCD de 16 bits para binário inteiro.
- * * A função decompõe o valor BCD em 4 dígitos decimais (milhares, centenas, 
- * dezenas e unidades), isolando cada nibble (4 bits) através de shifts e máscaras.
+ * * A função decompõe o valor BCD em 4 dígitos decimais (milhares, centenas,
+ * dezenas e unidades), isolando cada nibble (4 bits) através de shifts e
+ * máscaras.
  * * @param bcd Valor codificado em BCD (ex: 0x1234).
  * @return uint16_t O valor decimal convertido em binário puro (ex: 1234).
  * * @note Exemplo de processamento para bcd = 0x1234:
@@ -156,13 +165,25 @@ uint16_t bcd2DEC(uint16_t bcd) {
  * 4. u = (0x1234 & 0xF)       = 4  -> 4 * 1    = 4
  * Resultado final: 1234
  */
-uint16_t bcd2Bin(uint16_t bcd) {
-
-  uint16_t m = (bcd >> 12) & 0x000F;
-  uint16_t c = (bcd >> 8) & 0x000F;
-  uint16_t d = (bcd >> 4) & 0x000F;
-  uint16_t u = bcd & 0x000F;
-  return (m * 1000) + (c * 100) + (d * 10) + u;
+int bcd2Bin(uint32_t bcd) {
+  int ultimo_nibble = bcd & 0x000F;
+  if (ultimo_nibble > 0x9) {
+    int sinal = ultimo_nibble;
+    int val = bcd >> 4;
+    int m = (val >> 12) & 0x000F;
+    int c = (val >> 8) & 0x000F;
+    int d = (val >> 4) & 0x000F;
+    int u = val & 0x000F;
+    int res = (m * 1000) + (c * 100) + (d * 10) + u;
+    return (sinal == 0x0D) ? -res : res;
+  } else {
+    int m = (bcd >> 12) & 0x000F;
+    int c = (bcd >> 8) & 0x000F;
+    int d = (bcd >> 4) & 0x000F;
+    int u = bcd & 0x000F;
+    int res = (m * 1000) + (c * 100) + (d * 10) + u;
+    return res;
+  }
 }
 
 /**
@@ -178,11 +199,13 @@ uint16_t bcd2Bin(uint16_t bcd) {
  * 3. Faz o ajuste (+3) sempre que um dígito decimal "ameaça" passar de 9.
  * Retorno: 0x0013.
  */
-uint16_t bin2BCD(uint16_t a) {
-  if (a == 0)
-    return 0;
+uint32_t bin2BCD(int a) {
+  uint32_t sinal = (a < 0) ? 0x0D : 0x0C;
+  unsigned int val = (a < 0) ? -a : (unsigned int)a;
+  if (val == 0)
+    return 0x0000C;
   uint32_t bcd = 0;
-  int bits = bin_puro(a);
+  int bits = bin_puro(val);
   for (int i = 0; i < bits; i++) {
     if (((bcd & 0x000F)) >= 0x0005)
       bcd += 0x0003;
@@ -192,10 +215,10 @@ uint16_t bin2BCD(uint16_t a) {
       bcd += 0x0300;
     if (((bcd & 0xF000)) >= 0x5000)
       bcd += 0x3000;
-    int bit = (a >> (bits - 1 - i)) & 1;
+    int bit = (val >> (bits - 1 - i)) & 1;
     bcd = (bcd << 1) | bit;
   }
-  return bcd;
+  return (bcd << 4) | sinal;
 }
 uint16_t somarBCD(uint16_t a, uint16_t b) {
   uint16_t res = (uint16_t)a + b;
@@ -249,7 +272,7 @@ uint16_t multiplicarBCD(uint16_t a, uint16_t b) {
   }
   return (uint16_t)res;
 }
-void print_bin(uint16_t bcd) {
+void print_bin(uint32_t bcd) {
   for (int i = find_bits(bcd) - 1; i >= 0; i--) {
     uint16_t bit = (bcd >> i) & 1;
     printf("%u", bit);
@@ -259,22 +282,22 @@ void print_bin(uint16_t bcd) {
   // printf("\n");
 }
 
-void print_bin_custom(uint16_t bcd, int tam) {
+void print_bin_custom(uint32_t bcd, int tam) {
   for (int i = tam - 1; i >= 0; i--) {
-    uint16_t bit = (bcd >> i) & 1;
+    uint32_t bit = (bcd >> i) & 1;
     printf("%u", bit);
     if (i % 4 == 0 && i != 0)
       printf(" ");
   }
   // printf("\n");
 }
-void tabela_decbcd(uint16_t *numeros, int total) {
+void tabela_decbcd(uint32_t *numeros, int total) {
 
   printf(" DEC   |       BIN (BCD)      | HEX (BCD)\n");
   printf("-------|----------------------|----------\n");
   for (int i = 0; i < total; i++) {
     int n = numeros[i];
-    uint16_t res = dec2BCD(n);
+    uint32_t res = dec2BCD(n);
     printf(" %-5d | ", n);
     int tam = (res > 0x0FFF) ? 16 : (res > 0x00FF ? 12 : 8);
     print_bin_custom(res, tam);
@@ -285,7 +308,7 @@ void tabela_decbcd(uint16_t *numeros, int total) {
   }
   printf("---------------------|---------|---------\n");
 }
-void tabela_bcddec(uint16_t *numeros, int total) {
+void tabela_bcddec(uint32_t *numeros, int total) {
 
   printf("      BIN (BCD)      |   DEC   |   HEX   \n");
   // 2. Linha separadora (20 traços + barra + 9 traços + barra + 9 traços)
@@ -293,29 +316,39 @@ void tabela_bcddec(uint16_t *numeros, int total) {
 
   for (int i = 0; i < total; i++) {
     int n = numeros[i];
-    uint16_t res = bcd2Bin(n);
+    int res = bcd2Bin(n);
     // int tam = (n > 0xFF) ? 12 : 8;
     int tam = (n > 0x0FFF) ? 16 : (n > 0x00FF ? 12 : 8);
     print_bin_custom(n, tam);
     int espacos = 20 - (tam + (tam / 4 - 1));
     for (int s = 0; s < espacos; s++)
       printf(" ");
-    printf(" |   %-5u | 0x%03X\n", res, n);
+    printf(" |   %-5d | 0x%03X\n", res, n);
   }
   printf("---------------------|---------|---------\n");
 }
 int main() {
-  uint16_t numeros_dec[] = {10, 13, 25, 57, 125, 1964};
-  uint16_t numeros_bin[] = {0b10010110, 0b1010100, 0b100001010111};
+  uint32_t numeros_dec[] = {10, 13, 25, 57, 125, 1964};
+  uint32_t numeros_bin[] = {0b10010110, 0b1010100, 0b100001010111};
   int total_dec = sizeof(numeros_dec) / sizeof(numeros_dec[0]);
   int total_bin = sizeof(numeros_bin) / sizeof(numeros_bin[0]);
   tabela_decbcd(numeros_dec, total_dec);
   tabela_bcddec(numeros_bin, total_bin);
+  uint32_t a = 0x96D;
+  uint32_t b = 0x10C;
+  int num1 = bcd2Bin(a); // Converte 0x96D para -96
+  int num2 = bcd2Bin(b); // Converte 0x10C para 10
+  int soma = num1 + num2;
+  uint32_t res = bin2BCD(soma);
+  printf("Binario BCD: ");
+  print_bin(res);
+  printf("\nSoma Real (Decimal): %d", soma);  // Imprime -86
+  printf("\nSoma em BCD (Hex): 0x%X\n", res); // Imprime 0x86D
+  // uint16_t a = 0x0025;
+  // uint16_t b = 0x0013;
 
-  uint16_t a = 0x0025;
-  uint16_t b = 0x0013;
+  // printf("0x%x", multiplicarBCD(a, b));
 
-  printf("0x%x", multiplicarBCD(a, b));
   //   uint16_t x = 1964;
   //   uint16_t res = dec2BCD(x);
   //   uint16_t bins = bcd2Bin(res);
