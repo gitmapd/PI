@@ -3,10 +3,13 @@
 #include <stdio.h>
 
 /* Nota: reverter ao original
-  uint32_t *numeros, int total
+  void function (uint32_t *numeros, int total)
   int total_bin = sizeof(numeros_bin) / sizeof(numeros_bin[0]);
-  tabela_decbcd(numeros);
   tabela_bcddec(numeros_bin, total_bin);
+  numeros_d.data = numeros_dec;
+  numeros_d.total = sizeof(numeros_dec) / sizeof(numeros_dec[0]);
+  for (int i = 0; i < total.total; i++) {
+  int n = total.data[i];
 */
 typedef struct {
   uint32_t *data;
@@ -300,12 +303,12 @@ void print_bin_custom(uint32_t bcd, int tam) {
   }
   // printf("\n");
 }
-void tabela_decbcd(DataList total) {
+void tabela_decbcd(DataList *list) {
 
   printf(" DEC   |       BIN (BCD)      | HEX (BCD)\n");
   printf("-------|----------------------|----------\n");
-  for (int i = 0; i < total.total; i++) {
-    int n = total.data[i];
+  for (int i = 0; i < list->total; i++) {
+    int n = list->data[i];
     uint32_t res = dec2BCD(n);
     printf(" %-5d | ", n);
     int tam = (res > 0x0FFF) ? 16 : (res > 0x00FF ? 12 : 8);
@@ -317,14 +320,14 @@ void tabela_decbcd(DataList total) {
   }
   printf("---------------------|---------|---------\n");
 }
-void tabela_bcddec(DataList total) {
+void tabela_bcddec(DataList *list) {
 
   printf("      BIN (BCD)      |   DEC   |   HEX   \n");
   // 2. Linha separadora (20 traços + barra + 9 traços + barra + 9 traços)
   printf("---------------------|---------|---------\n");
 
-  for (int i = 0; i < total.total; i++) {
-    int n = total.data[i];
+  for (int i = 0; i < list->total; i++) {
+    int n = list->data[i];
     int res = bcd2Bin(n);
     // int tam = (n > 0xFF) ? 12 : 8;
     int tam = (n > 0x0FFF) ? 16 : (n > 0x00FF ? 12 : 8);
@@ -342,16 +345,16 @@ int main() {
   // int total_dec = sizeof(numeros_dec) / sizeof(numeros_dec[0]);
   DataList numeros_d;
   DataList numeros_b;
- 
+
   numeros_d.data = numeros_dec;
   numeros_d.total = sizeof(numeros_dec) / sizeof(numeros_dec[0]);
 
   numeros_b.data = numeros_bin;
   numeros_b.total = sizeof(numeros_bin) / sizeof(numeros_bin[0]);
 
-  tabela_decbcd(numeros_d);
+  tabela_decbcd(&numeros_d);
 
-  tabela_bcddec(numeros_b);
+  tabela_bcddec(&numeros_b);
 
   uint32_t a = 0x96D;
 
