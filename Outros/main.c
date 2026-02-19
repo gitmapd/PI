@@ -100,7 +100,7 @@ int main() {
   double sound_bytes27 = (double)total_bits27 / BYTE;
 
   printf("%-7s | %-35s | %.f kB\n", "2.7", "Tamanho Som (SI)",sound_bytes27 / MB_SI);
-  printf("%-7s | %-35s | %f KiB\n", "2.8", "Tamanho Som (Binary)",sound_bytes27 / MiB);
+  printf("%-7s | %-35s | %f KiB\n", "2.7", "Tamanho Som (Binary)",sound_bytes27 / MiB);
 
 
   // Dados: 4.5 kB (SI), 60s, 50 Hz. Queremos descobrir resolution_bits.
