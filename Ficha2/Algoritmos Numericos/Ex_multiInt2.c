@@ -10,11 +10,16 @@ void print_bin(int n, int total_bits) {
   printf("\n");
 }
 float multInt2(int n, float m, int *ops, int *iteracoes) {
+  int n_original = n;
+    float m_original = m;
+  float parcelas[32];
   float r = 0;
   *iteracoes = 0;
   *ops = 0;
+  int p = 0;
   while (n > 0) {
     if (n & 1) {
+      parcelas[p++]=m;
       r = r + m;
       (*ops)++;
     }
@@ -22,6 +27,12 @@ float multInt2(int n, float m, int *ops, int *iteracoes) {
     m *= 2;
     (*iteracoes)++;
   }
+  for(int i = 0 ; i < p; i++) {
+    printf("%0.f",parcelas[i]);
+    if(i < p - 1) printf(" + ");
+  }
+  // 3. Impressão do resultado e da expressão original na mesma linha
+    printf(" = %.0f = %d * %.0f.\n", r, n_original, m_original);
   return r;
 }
 

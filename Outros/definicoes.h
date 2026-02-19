@@ -27,9 +27,9 @@
 #define CHANNELS 3 // RGB
 #define BITS_PER_CHANNEL 8
 
-#define CALC_PIXELS(w, h) ((w) * (h))
+#define CALC_PIXELS(w, h) ((long long)(w) * (h))
 
-#define BYTES_PARA_BITS(n) ((n)*8)
+#define BYTES_PARA_BITS(n) ((n)*BYTE)
 
 #define TO_BYTES(n) ((n)*KiB)
 
@@ -37,20 +37,21 @@
 
 #define CALC_BITS_CH(size_kib, pixels, ch)                                     \
   (((float)(size_kib)*KiB * BYTE) / ((pixels) * (ch)))
-#endif
 
 typedef struct {
-    int width, height, channels, bpp;
-    long long size_bytes;
+  int width, height, channels, bpp;
+  long long size_bytes;
 } ImageMeta;
 
 typedef struct {
-    float rate_hz;
-    int resolution_bits;
-    int duration_sec;
+  float rate_hz;
+  int resolution_bits;
+  int duration_sec;
 } SoundMeta;
 
 typedef struct {
-    int *data;
-    int total;
+  int *data;
+  int total;
 } DataList;
+
+#endif
