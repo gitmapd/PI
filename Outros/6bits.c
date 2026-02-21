@@ -79,7 +79,7 @@ int imprimir_bin(int n, int total_bits) {
 //         c1 = n;
 //         c2 = n;
 //     } else {
-//         c1 = (~abs(n)) & 0xFF; // (unsigned char)(n) e & 0xFF limpam os bits extras 
+//         c1 = (~abs(n)  ) & 0xFF; // (unsigned char)(n) e & 0xFF limpam os bits extras 
 //         c2 = (c1 + 1) & 0xFF;
 //     }
     
