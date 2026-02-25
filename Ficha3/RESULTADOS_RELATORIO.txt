@@ -1,0 +1,9 @@
+=== RESULTADOS PARA O RELATÓRIO ===
+
+1. ÍNDICE DE REFRAÇÃO (n2): 1.472
+2. ERRO RELATIVO: 1.18%
+3. AMPLIAÇÃO MICROSCÓPIO: 3.33x
+
+Verifica a pasta do script! Deves ter lá:
+- grafico_snell.png (Usa no LaTeX)
+- dados.csv (Os teus dados)
