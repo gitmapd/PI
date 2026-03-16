@@ -1,12 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-
-typedef struct aluno {
-  int numero;
-  char nome[100];
-  int miniT[6];
-  float teste;
-} Aluno;
+#include "Aluno.h"
 
 int nota(Aluno a) {
   float somaMT = 0;
