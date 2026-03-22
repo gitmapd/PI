@@ -25,6 +25,7 @@ int nota(Aluno a) {
   return (resultado >= 10) ? resultado : 0;
 }
 
+// Decrescente
 void ordenaPorNum(Aluno t[], int N) {
   int i, j, min_idx;
   for (int i = 0; i < N - 1; i++) {
